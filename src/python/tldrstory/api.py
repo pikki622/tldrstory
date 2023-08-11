@@ -30,7 +30,7 @@ class API(txtai.api.API):
 
         elif query.startswith("url:"):
             query = query.replace("url:", "")
-            query = "%" + query + "%"
+            query = f"%{query}%"
 
             return cur.execute("SELECT id, 1.0 as score FROM articles WHERE reference like ? ORDER BY date DESC LIMIT 100", [query]).fetchall()
 
@@ -73,7 +73,7 @@ class API(txtai.api.API):
 
                 # Build slider select sql
                 for name in filters:
-                    sql += ", (SELECT value FROM labels WHERE article=? AND category=? AND name=?) AS %s" % name
+                    sql += f", (SELECT value FROM labels WHERE article=? AND category=? AND name=?) AS {name}"
                     params.extend([uid, name, name])
 
                 sql += " FROM articles WHERE id = ?"
@@ -84,14 +84,13 @@ class API(txtai.api.API):
                     # Get current range from request
                     current = [float(x) for x in request.query_params[name].split(":")]
 
-                    sql += " AND %s >= ? AND %s <= ?" % (name, name)
+                    sql += f" AND {name} >= ? AND {name} <= ?"
                     params.extend(current)
 
                 # Run statement
                 cur.execute(sql, params)
 
-                result = cur.fetchone()
-                if result:
+                if result := cur.fetchone():
                     results.append(result)
 
         return results

@@ -94,9 +94,10 @@ class Components(object):
 
         filters = []
         if "filters" in layout:
-            for name in layout["filters"]:
-                filters.append((name, [x / 10 for x in st.slider(name, 0, 10, (0, 10), 1)]))
-
+            filters.extend(
+                (name, [x / 10 for x in st.slider(name, 0, 10, (0, 10), 1)])
+                for name in layout["filters"]
+            )
         return filters
 
     @staticmethod
@@ -140,7 +141,7 @@ class Components(object):
             mean = df[column].mean()
             if config:
                 # Apply style to summary section
-                summary.append("%s: %s" % (column, Components.style(config, mean)))
+                summary.append(f"{column}: {Components.style(config, mean)}")
 
                 # Apply style to column
                 df[column] = df.apply(lambda x: Components.style(config, x[column]), axis=1)
@@ -176,7 +177,7 @@ class Components(object):
             hyperlink text
         """
 
-        return '<a href="{}" rel="noopener noreferrer" target="_blank">{}</a>'.format(url, name)
+        return f'<a href="{url}" rel="noopener noreferrer" target="_blank">{name}</a>'
 
     @staticmethod
     def style(config, value):
@@ -191,11 +192,14 @@ class Components(object):
             styled result
         """
 
-        for low, high, name, style in config:
-            if low <= value <= high:
-                return '<span style="{}">{}</span>'.format(style, name)
-
-        return None
+        return next(
+            (
+                f'<span style="{style}">{name}</span>'
+                for low, high, name, style in config
+                if low <= value <= high
+            ),
+            None,
+        )
 
 class App(object):
     """

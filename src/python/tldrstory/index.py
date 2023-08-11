@@ -67,13 +67,19 @@ class Index(object):
         baseurl = Index.baseurl(article.url)
 
         # Check that article doesn't already exist
-        database.cur.execute("SELECT 1 FROM articles WHERE Id=? OR Reference LIKE ?", [article.uid, "%" + baseurl + "%"])
+        database.cur.execute(
+            "SELECT 1 FROM articles WHERE Id=? OR Reference LIKE ?",
+            [article.uid, f"%{baseurl}%"],
+        )
 
         # Accept submission if:
         #  - Submission id or url doesn't already exist
         #  - Submission link isn't an ignored pattern
-        return not database.cur.fetchone() and article.url.startswith("http") and \
-               all([not re.search(pattern, article.url) for pattern in ignore])
+        return (
+            not database.cur.fetchone()
+            and article.url.startswith("http")
+            and all(not re.search(pattern, article.url) for pattern in ignore)
+        )
 
     @staticmethod
     def labels(name, config, result):
@@ -92,7 +98,7 @@ class Index(object):
 
         # Build aggregate value for a list of fields
         if "aggregate" in config:
-            score = sum([score for label, score in result if label in config["aggregate"]])
+            score = sum(score for label, score in result if label in config["aggregate"])
 
             # Normalize range
             if "normalize" in config:
